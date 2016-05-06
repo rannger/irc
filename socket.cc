@@ -23,8 +23,8 @@ inline slist_t splitString(const std::string &s)
     str_t str;
 
 	while (std::getline(stream, str)) {
-        elems.push_back(str);
-    }
+        	elems.push_back(str);
+    	}
 
     return elems;
 }
@@ -38,11 +38,10 @@ namespace rirc {
 	,m_commandHandler(commandHandler)
 	,m_socketfd(-1)
 	{
-		if (pthread_mutex_init(&m_lock, NULL) != 0)
-	    {
-	        __LOGS("\n mutex init failed\n");
-	        exit(-1);
-	    }
+		if (pthread_mutex_init(&m_lock, NULL) != 0) {
+	        	__LOGS("\n mutex init failed\n");
+	        	exit(-1);
+	    	}
 	}
 
 	Socket::~Socket()
@@ -76,8 +75,7 @@ namespace rirc {
 	    										 "tolsun",
 	    										 ":Ronnie Reagan")};
 	
-	    	for (int i = 0; i < 3; ++i)
-	    	{
+	    	for (int i = 0; i < 3; ++i) {
 	    		Command* cmd = cmds[i];
 	    		self.sendCommand(*cmd);
 	    		delete cmd;
@@ -119,8 +117,7 @@ namespace rirc {
 		uint8_t buf[512];
 		str_t message;
 		ssize_t size = 0;
-		do
-		{
+		do {
 			message.clear();
 			size = 0;
 			do{
@@ -133,8 +130,7 @@ namespace rirc {
 			if (message.size() > 0) {
 				const slist_t array = ::splitString(message);
 
-	        	for (const str_t & mesg : array)
-	        	{
+	        		for (const str_t & mesg : array) {
 					Message msg = Message::parseMessage(mesg);
 					pthread_mutex_lock((pthread_mutex_t*)&self.m_lock);
 					self.m_commandHandler(msg,(Socket*)param);
