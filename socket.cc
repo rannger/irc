@@ -69,8 +69,8 @@ namespace rirc {
 	    	server.sin_port = htons(m_port);
 	
 	    	__IF_DO(::connect(socket , (struct sockaddr *)&server , sizeof(server)) < 0,
-					__LOGS("connect error");
-	        		return;);
+			__LOGS("connect error");
+	        	return;);
 	    	m_socketfd = socket;
 	
 	    	Command* cmds[3] = {CommandBulider::bulidPassCommand(m_username),
