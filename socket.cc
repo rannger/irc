@@ -1,20 +1,25 @@
-#include <sys/socket.h>
+#ifdef __WIN32__
+# include <winsock2.h>
+#else
+# include <sys/socket.h>
+# include <netdb.h>
+# include <netinet/in.h>
+# include <arpa/inet.h>
+# include <sys/uio.h>
+#endif
 #include <sys/types.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <netdb.h>
-#include <sys/uio.h>
 #include <string.h>
 #include <sstream>
 #include <istream>
+#include <stdlib.h>
 #include "socket.h"
 #include "Command.h"
 #include "CommandBulider.h"
 #include "macro.h"
 #include "Message.h"
-#include <stdlib.h>
+
 
 inline slist_t splitString(const std::string &s) 
 {
@@ -23,8 +28,8 @@ inline slist_t splitString(const std::string &s)
     str_t str;
 
 	while (std::getline(stream, str)) {
-        	elems.push_back(str);
-    	}
+        elems.push_back(str);
+    }
 
     return elems;
 }
@@ -71,17 +76,18 @@ namespace rirc {
 	    	Command* cmds[3] = {CommandBulider::bulidPassCommand(m_username),
 	    						CommandBulider::bulidNickCommand(m_username),
 	    						CommandBulider::bulidUserCommand(m_username.data(),
-  											 "tolmoon",
+	    										 "tolmoon",
 	    										 "tolsun",
 	    										 ":Ronnie Reagan")};
 	
-	    	for (int i = 0; i < 3; ++i) {
+	    	for (int i = 0; i < 3; ++i)
+	    	{
 	    		Command* cmd = cmds[i];
 	    		self.sendCommand(*cmd);
 	    		delete cmd;
 	    		cmds[i] = NULL;
 	    	}
-	
+
    		pthread_attr_t attr;
 
    		pthread_attr_init(&attr);
@@ -94,12 +100,13 @@ namespace rirc {
 
 	void Socket::disconnect() 
 	{
+		__CHECK(m_socketfd > 0);
 		Command* cmd = CommandBulider::bulidQuitCommand("");
 		self.sendCommand(*cmd);
 		delete cmd;
 		close(m_socketfd);
-
-		__IF_DO(m_thread>0,pthread_cancel(m_thread););
+		m_socketfd = 0;
+		pthread_cancel(m_thread);
 	}
 	
 	void Socket::sendCommand(const Command& cmd) const
@@ -115,22 +122,16 @@ namespace rirc {
 	{
 		const Socket& self = *((Socket*)param);
 		uint8_t buf[512];
-		str_t message;
-		ssize_t size = 0;
-		do {
-			message.clear();
-			size = 0;
-			do{
-				bzero(buf,512*sizeof(uint8_t));
-				size = ::read(self.m_socketfd,buf,512);
-				const str_t msg((char*)buf,size);
-				message += msg;
-			} while (size >= 512);
+		do
+		{
+			bzero(buf,512*sizeof(uint8_t));
+			const ssize_t size = ::read(self.m_socketfd,buf,512);
 			
-			if (message.size() > 0) {
-				const slist_t array = ::splitString(message);
+			if (size > 0) {
+				const str_t msg((char*)buf,size);
+				const slist_t array = ::splitString(msg);
 
-	        		for (const str_t & mesg : array) {
+				for (const str_t& mesg : array){
 					Message msg = Message::parseMessage(mesg);
 					pthread_mutex_lock((pthread_mutex_t*)&self.m_lock);
 					self.m_commandHandler(msg,(Socket*)param);

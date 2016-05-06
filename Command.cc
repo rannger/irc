@@ -1,6 +1,7 @@
 #include "Command.h"
 #include "CommandBulider.h"
 #include "macro.h"
+#include <string.h>
 
 namespace rirc
 {
@@ -52,8 +53,7 @@ namespace rirc
 		size_t retval = 0;
 		retval += self.commandName().size();
 		++retval;
-		for(int i = 0;i<self.params().size();i++) {
-			const str_t &param = self.params().at(i);
+		for (const str_t & param : self.params()){
 			retval += param.size();
 			++retval;
 		}
@@ -68,15 +68,14 @@ namespace rirc
 		static const uint8_t end[]={0x0d,0x0a};
 		uint8_t *buf = buffer;
 		memset(buf,0,len);
-		for(int i = 0;i	< self.commandName().length();i++ ){
-			*buf = self.commandName().at(i);
+		for (const char & ch : self.commandName()){
+			*buf = ch;
 			buf++;
 		}
 		*(buf++) = byte;
-		for (int i = 0;i < self.params().size();i++) {
-			const str_t param = self.params().at(i);
-			for(int i = 0;i	< param.length();i++ ){
-				*buf = param.at(i);
+		for (const str_t& param : self.params()){
+			for (const char& ch : param){
+				*buf =ch;
 				buf++;
 			}
 			*(buf++) = byte;

@@ -7,11 +7,11 @@
 
 inline std::vector<str_t> &split(const str_t &s, char delim, std::vector<str_t> &elems) {
    	std::stringstream ss(s);
-    str_t item;
-    while (std::getline(ss, item, delim)) {
-        elems.push_back(item);
-    }
-    return elems;
+	str_t item;
+    	while (std::getline(ss, item, delim)) {
+       		 elems.push_back(item);
+    	}
+    	return elems;
 }
 
 
@@ -571,70 +571,65 @@ namespace rirc
 			str_t trail;
 
 			        // With or without trail
-	        if (haveTrailDivider)
-	        {
-	            // Have trail, split by trail
-	            str_t uptotrail = message.substr(0, trailDivider);
-	            trail = message.substr(trailDivider + 2);
-	            const std::vector<str_t> res = ::split(uptotrail,' ');
-	            parts.insert(parts.begin(),res.begin(), res.end());
-	        }
-	        else
-	        {
-	            // No trail, everything are parameters
-	            const std::vector<str_t> res = ::split(message,' ');
-	            parts.insert(parts.begin(),res.begin(), res.end());
-	        }
+		        if (haveTrailDivider) {
+		            // Have trail, split by trail
+		            str_t uptotrail = message.substr(0, trailDivider);
+		            trail = message.substr(trailDivider + 2);
+		            const std::vector<str_t> res = ::split(uptotrail,' ');
+		            parts.insert(parts.begin(),res.begin(), res.end());
+		        } else {
+		            // No trail, everything are parameters
+		            const std::vector<str_t> res = ::split(message,' ');
+		            parts.insert(parts.begin(),res.begin(), res.end());
+		        }
+	
+		        enum DecoderState
+		        {
+		            PREFIX,
+		            COMMAND,
+		            PARAMETER
+		        } state;
+	
+		        bool first = true;
+	        	state = PREFIX;
+	
+		        for (const str_t & part : parts) {
+		            switch (state)
+		            {
+		                // Prefix, or command... have to be decided
+		                case PREFIX:
+		                case COMMAND:
+		                {
+		                    // Prefix, aka origin of message
+		                    bool havePrefix = part[0] == ':';
+	
+		                    if (havePrefix && first)
+		                    {
+		                        // Oh the sanity
+		                        __IF_DO(part.size() < 2,return Message(););
+		                        // Have prefix
+		                        state = COMMAND;
+		                        prefix = part.substr(1);
+		                        first = false;
+		                    }
+		                    else
+		                    {
+		                        // Have command
+		                        state = PARAMETER;
+		                        command = part;
+		                    }
+	
+		                    break;
+		                }
+		                case PARAMETER:
+		                {
+		                    parameters.push_back(part);
+		                    break;
+		                }
+		            }
+	
+		        }
 
-	        enum DecoderState
-	        {
-	            PREFIX,
-	            COMMAND,
-	            PARAMETER
-	        } state;
-
-	        bool first = true;
-        	state = PREFIX;
-
-	        for (const str_t & part : parts)
-	        {
-	            switch (state)
-	            {
-	                // Prefix, or command... have to be decided
-	                case PREFIX:
-	                case COMMAND:
-	                {
-	                    // Prefix, aka origin of message
-	                    bool havePrefix = part[0] == ':';
-
-	                    if (havePrefix && first)
-	                    {
-	                        // Oh the sanity
-	                        __IF_DO(part.size() < 2,return Message(););
-	                        // Have prefix
-	                        state = COMMAND;
-	                        prefix = part.substr(1);
-	                        first = false;
-	                    }
-	                    else
-	                    {
-	                        // Have command
-	                        state = PARAMETER;
-	                        command = part;
-	                    }
-
-	                    break;
-	                }
-	                case PARAMETER:
-	                {
-	                    parameters.push_back(part);
-	                    break;
-	                }
-	            }
-
-	        }
-
-	        // __IF_DO(std::regex_match(command,e),command = str_t(ircFlags().at(command)););
 			return Message(message, command, prefix, parameters, trail);
 		}
 
