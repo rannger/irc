@@ -74,11 +74,11 @@ namespace rirc {
 	    	m_socketfd = socket;
 	
 	    	Command* cmds[3] = {CommandBulider::bulidPassCommand(m_username),
-	    						CommandBulider::bulidNickCommand(m_username),
-	    						CommandBulider::bulidUserCommand(m_username.data(),
-	    										 "tolmoon",
-	    										 "tolsun",
-	    										 ":Ronnie Reagan")};
+       				    CommandBulider::bulidNickCommand(m_username),
+	    			    CommandBulider::bulidUserCommand(m_username.data(),
+	    				       			     "tolmoon",
+	    							     "tolsun",
+	    							     ":Ronnie Reagan")};
 	
 	    	for (int i = 0; i < 3; ++i)
 	    	{
@@ -95,7 +95,6 @@ namespace rirc {
 
    		int res = pthread_create(&m_thread, &attr, Socket::handleSocketStream, (void *)this); 
    		pthread_attr_destroy(&attr);
-   		__CHECK(res>0);
 	}
 
 	void Socket::disconnect() 
@@ -122,8 +121,7 @@ namespace rirc {
 	{
 		const Socket& self = *((Socket*)param);
 		uint8_t buf[512];
-		do
-		{
+		do {
 			bzero(buf,512*sizeof(uint8_t));
 			const ssize_t size = ::read(self.m_socketfd,buf,512);
 			
