@@ -62,28 +62,28 @@ namespace rirc {
 
   		bcopy(hserver->h_addr, (char *)&server.sin_addr.s_addr,hserver->h_length);
   		server.sin_family = AF_INET;
-    	server.sin_port = htons(m_port);
-
-    	__IF_DO(::connect(socket , (struct sockaddr *)&server , sizeof(server)) < 0,
-				__LOGS("connect error");
-        		return;);
-    	m_socketfd = socket;
-
-    	Command* cmds[3] = {CommandBulider::bulidPassCommand(m_username),
-    						CommandBulider::bulidNickCommand(m_username),
-    						CommandBulider::bulidUserCommand(m_username.data(),
-    														 "tolmoon",
-    														 "tolsun",
-    														 ":Ronnie Reagan")};
-
-    	for (int i = 0; i < 3; ++i)
-    	{
-    		Command* cmd = cmds[i];
-    		self.sendCommand(*cmd);
-    		delete cmd;
-    		cmds[i] = NULL;
-    	}
-
+	    	server.sin_port = htons(m_port);
+	
+	    	__IF_DO(::connect(socket , (struct sockaddr *)&server , sizeof(server)) < 0,
+					__LOGS("connect error");
+	        		return;);
+	    	m_socketfd = socket;
+	
+	    	Command* cmds[3] = {CommandBulider::bulidPassCommand(m_username),
+	    						CommandBulider::bulidNickCommand(m_username),
+	    						CommandBulider::bulidUserCommand(m_username.data(),
+  											 "tolmoon",
+	    										 "tolsun",
+	    										 ":Ronnie Reagan")};
+	
+	    	for (int i = 0; i < 3; ++i)
+	    	{
+	    		Command* cmd = cmds[i];
+	    		self.sendCommand(*cmd);
+	    		delete cmd;
+	    		cmds[i] = NULL;
+	    	}
+	
    		pthread_attr_t attr;
 
    		pthread_attr_init(&attr);
