@@ -1,8 +1,7 @@
 #ifndef __MESSAGE_
 #define __MESSAGE_
+#pragma once
 #include "types.h"
-
-
 
 namespace rirc {
 	extern const str_t kMessagePrefix;

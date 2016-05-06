@@ -1,6 +1,6 @@
 #ifndef __COMMAND_BULIDER_
 #define __COMMAND_BULIDER_
-
+#pragma once
 #include "types.h"
 
 namespace rirc {

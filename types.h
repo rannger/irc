@@ -1,6 +1,6 @@
 #ifndef __IRC_TYPES_H_
 #define __IRC_TYPES_H_ 
-
+#pragma once
 #include <map>
 #include <vector>
 #include <string>

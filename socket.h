@@ -1,5 +1,6 @@
 #ifndef __SOCKET_H_
 #define __SOCKET_H_ 
+#pragma once
 #include <pthread.h>
 #include "types.h"
 #include "CommandBulider.h"
