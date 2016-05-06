@@ -95,6 +95,7 @@ namespace rirc {
 
    		int res = pthread_create(&m_thread, &attr, Socket::handleSocketStream, (void *)this); 
    		pthread_attr_destroy(&attr);
+		__IF_DO(res<0,exit(-1););
 	}
 
 	void Socket::disconnect() 
