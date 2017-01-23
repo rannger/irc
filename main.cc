@@ -6,14 +6,18 @@
 #include <stdio.h>
 #include <fstream>
 #include <stdlib.h>
+#include <ncurses.h>
 
 void commandHandler(const rirc::Message& msg,rirc::Socket* socket);
 int main(int argc, char const *argv[])
 {
+	initscr();
+	printw("Hello World !!!");
+	refresh();
 	rirc::Socket* socket = new rirc::Socket("irc.freenode.net",6667,"rst0aic",commandHandler);
 	socket->connect();
-
-	while(1){;}
+	while(1);
+	endwin();
 	return 0;
 }
 
@@ -59,7 +63,7 @@ void commandHandler(const rirc::Message& msg,rirc::Socket* socket)
 			__LOG("%s\n",msg.trail().data());
 		}
 		else if (msg.command() == str_t("PRIVMSG")) {
-			__LOG("<%s> %s\n",msg.prefix().data(),msg.trail().data());
+			__LOG("%s<%s>%s%s %s\n",KGRN,msg.prefix().data(),RESET,KMAG,msg.trail().data());
 			std::ofstream file("log.txt",std::ios_base::app);
 			char buff[1024];
   			snprintf(buff, sizeof(buff), "<%s> %s\n",msg.prefix().data(),msg.trail().data());
@@ -67,6 +71,6 @@ void commandHandler(const rirc::Message& msg,rirc::Socket* socket)
 			file << buffAsStdStr;
 			file.close();
 		} else {
-			__LOG("%s\n",msg.msg().data());
+			__LOG("%s%s\n",KRED,msg.msg().data());
 		}
 }

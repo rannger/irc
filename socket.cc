@@ -19,7 +19,7 @@
 #include "CommandBulider.h"
 #include "macro.h"
 #include "Message.h"
-
+#include <ncurses.h>
 
 inline slist_t splitString(const std::string &s) 
 {
