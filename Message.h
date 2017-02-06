@@ -12,7 +12,7 @@ namespace rirc {
 	class Message
 	{
 	public:
-		static Message parseMessage(const str_t& message);
+		static Message* parseMessage(const str_t& message);
 		static const dict_t& ircFlags();
 		Message();
 		Message(const str_t& msg,

@@ -3,21 +3,22 @@
 #include <regex>
 #include <sstream>
 #include <utility>
-
+#include <memory>
 
 inline std::vector<str_t> &split(const str_t &s, char delim, std::vector<str_t> &elems) {
-   	std::stringstream ss(s);
-	str_t item;
-    	while (std::getline(ss, item, delim)) {
-       		 elems.push_back(item);
-    	}
+   	std::stringstream *ss = new std::stringstream(s);
+	str_t *item = new str_t();
+    	while (std::getline(*ss, *item, delim)) 
+       		 elems.push_back(*item);
+	delete ss;
+	delete item;
     	return elems;
 }
 
 
-inline std::vector<str_t> split(const str_t &s, char delim) {
-    std::vector<str_t> elems;
-    ::split(s, delim, elems);
+inline std::vector<str_t>* split(const str_t &s, char delim) {
+    std::vector<str_t> *elems = new std::vector<str_t>();
+    ::split(s, delim, *elems);
     return elems;
 }
 
@@ -557,30 +558,32 @@ namespace rirc
 
 		}
 
-		Message Message::parseMessage(const str_t& message)
+		Message* Message::parseMessage(const str_t& message)
 		{
-			__IF_DO(message.empty(),return Message(););
+			__IF_DO(message.empty(),return NULL;);
 			static std::regex e ("^\\d{3}$");
 			auto trailDivider = message.find(" :");
 			bool haveTrailDivider = trailDivider != message.npos;
 
-			std::vector<str_t> parts;
+			std::auto_ptr< std::vector<str_t> > parts(new std::vector<str_t>());
 			str_t prefix;
 			str_t command;
 			std::vector<str_t> parameters;
 			str_t trail;
 
-			        // With or without trail
+			 // With or without trail
 		        if (haveTrailDivider) {
 		            // Have trail, split by trail
 		            str_t uptotrail = message.substr(0, trailDivider);
 		            trail = message.substr(trailDivider + 2);
-		            const std::vector<str_t> res = ::split(uptotrail,' ');
-		            parts.insert(parts.begin(),res.begin(), res.end());
+		            std::vector<str_t> *res = ::split(uptotrail,' ');
+		            parts->insert(parts->begin(),res->begin(), res->end());
+			    delete res;
 		        } else {
 		            // No trail, everything are parameters
-		            const std::vector<str_t> res = ::split(message,' ');
-		            parts.insert(parts.begin(),res.begin(), res.end());
+		            std::vector<str_t> *res = ::split(message,' ');
+		            parts->insert(parts->begin(),res->begin(), res->end());
+			    delete res;
 		        }
 	
 		        enum DecoderState
@@ -593,7 +596,7 @@ namespace rirc
 		        bool first = true;
 	        	state = PREFIX;
 	
-		        for (const str_t & part : parts) {
+		        for (const str_t & part : *parts) {
 		            switch (state)
 		            {
 		                // Prefix, or command... have to be decided
@@ -606,7 +609,8 @@ namespace rirc
 		                    if (havePrefix && first)
 		                    {
 		                        // Oh the sanity
-		                        __IF_DO(part.size() < 2,return Message(););
+		                        __IF_DO(part.size() < 2,
+						return NULL;);
 		                        // Have prefix
 		                        state = COMMAND;
 		                        prefix = part.substr(1);
@@ -630,7 +634,8 @@ namespace rirc
 	
 		        }
 
-			return Message(message, command, prefix, parameters, trail);
+			Message* msg = new Message(message, command, prefix, parameters, trail);
+			return msg;
 		}
 
 		const dict_t& Message::ircFlags()

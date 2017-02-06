@@ -67,7 +67,7 @@ namespace rirc
 		static const uint8_t byte=0x20;
 		static const uint8_t end[]={0x0d,0x0a};
 		uint8_t *buf = buffer;
-		memset(buf,0,len);
+		bzero(buffer,len);
 		for (const char & ch : self.commandName()){
 			*buf = ch;
 			buf++;

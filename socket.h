@@ -9,6 +9,7 @@
 namespace rirc {
 	class Socket
 	{
+	friend void* handleSocketStream(void* param);
 	public:
 		Socket(str_t ip,uint32_t port,str_t username,command_handler_t commandHandler);
 		~Socket();
@@ -25,9 +26,6 @@ namespace rirc {
 
 		int m_socketfd;
 		pthread_t m_thread;
-		pthread_mutex_t m_lock;
-
-		static void* handleSocketStream(void* param);
 	};
 }
 

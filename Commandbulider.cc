@@ -151,8 +151,8 @@ namespace rirc {
 	{
 		Command* cmd = new Command();
 		*(cmd->mutable_commandName()) = "PRIVMSG";
-		cmd->mutable_params()->push_back(msg);	
 		cmd->mutable_params()->push_back(receiver);	
+		cmd->mutable_params()->push_back(std::string(":")+msg);	
 
 		return cmd;
 	}
