@@ -8,12 +8,15 @@
 #include <iostream>
 #include <algorithm>
 #include <ncurses.h>
+#include <assert.h>
+#include <typeinfo>
 #include "socket.h"
 #include "Message.h"
 #include "macro.h"
 #include "CommandBulider.h"
 #include "Command.h"
 #include "cache.h"
+#include "privateMsg.h"
 
 void commandHandler(const rirc::Message& msg,rirc::Socket* socket);
 int main(int argc, char const *argv[])
@@ -44,20 +47,34 @@ int main(int argc, char const *argv[])
 			exit(-1);
 		} else if (0==retval) {
 			do {
-				str_t* msg = rirc::getMessage();
+				rirc::BaseMessage* msg = rirc::getMessage();
 				if (NULL!=msg) {
-					for(int i = 0;i<msg->size();++i) {
-						const uint8_t val = static_cast<uint8_t>(msg->at(i));
-						if (val < 0x20||val > 0x7E )
-							msg->at(i) = 0x20;
-					}
+					if (dynamic_cast<rirc::PrivateMessage*>(msg)==NULL) {
+						str_t* message = new str_t(msg->msg());
+						for(int i = 0;i<message->size();++i) {
+							const uint8_t val = static_cast<uint8_t>(message->at(i));
+							if (val < 0x20||val > 0x7E )
+							message->at(i) = 0x20;
+						}
 
-					*msg += "\n";
-					attron(COLOR_PAIR(2));
-					printw(msg->data());
-					attroff(COLOR_PAIR(2));
-					refresh();
-					delete msg;
+						*message += "\n";
+						attron(COLOR_PAIR(2));
+						printw(message->data());
+						attroff(COLOR_PAIR(2));
+						refresh();
+						delete message;
+						delete msg;
+					} else {
+						rirc::PrivateMessage* message = dynamic_cast<rirc::PrivateMessage*>(msg);
+						attron(COLOR_PAIR(1));
+						printw("<%s> ",message->speaker().data());
+						attroff(COLOR_PAIR(1));
+						attron(COLOR_PAIR(2));
+						printw("%s \n",message->msg().data());
+						attroff(COLOR_PAIR(2));
+						refresh();
+						delete message;
+					}
 				} else {
 					break;
 				}
@@ -130,7 +147,21 @@ void commandHandler(const rirc::Message& msg,rirc::Socket* socket)
 			//puts(RESET "--------------------------------------------------------------------------------\n" RESET);
 			__LOG("%s%s",KRED,msg.trail().data());
 		} else if (msg.command() == str_t("PRIVMSG")) {
-			__LOG("%s<%s>%s%s %s",KGRN,msg.prefix().data(),RESET,KMAG,msg.trail().data());
+			str_t prefix(msg.prefix());
+			str_t trail(msg.trail());
+			for(int i = 0;i<prefix.size();++i) {
+				const uint8_t val = static_cast<uint8_t>(prefix.at(i));
+				if (val < 0x20||val > 0x7E )
+						prefix.at(i) = 0x20;
+			}
+			for(int i = 0;i<trail.size();++i) {
+				const uint8_t val = static_cast<uint8_t>(trail.at(i));
+				if (val < 0x20||val > 0x7E )
+						trail.at(i) = 0x20;
+			}
+			rirc::PrivateMessage* message= new rirc::PrivateMessage(prefix,trail);
+			queueAdd(message);
+			//__LOG("%s<%s>%s%s %s",KGRN,msg.prefix().data(),RESET,KMAG,msg.trail().data());
 		} else {
 			/*
 			puts(RESET "--------------------------------------------------------------------------------\n" RESET);

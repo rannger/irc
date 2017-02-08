@@ -5,8 +5,11 @@
 #include <string>
 #include "cache.h"
 #include "pkt_queue.h"
+#include "types.h"
+#include "PrivateMsg.h"
 
 namespace rirc {
+
 	static struct queue_root *__queue = NULL;
 
 	void initQueue(void) 
@@ -22,15 +25,21 @@ namespace rirc {
 		va_start(argptr, format);
 		int res = vsnprintf(buf,1023,format, argptr);
 		va_end(argptr);
-		str_t *msg = new str_t(buf,res);
-		queue_add(__queue, msg);
+		str_t msg(buf,res);
+		rirc::BaseMessage *message = new rirc::BaseMessage(msg);
+		queue_add(__queue, message);
 		return res;
 	}
 
-	str_t* getMessage(void)
+	rirc::BaseMessage* getMessage(void)
 	{
-		str_t* retVal = NULL;
-		retVal = static_cast<str_t*>(queue_get(__queue));
+		rirc::BaseMessage* retVal = NULL;
+		retVal = static_cast<rirc::BaseMessage*>(queue_get(__queue));
 		return retVal;
+	}
+
+	void queueAdd(rirc::PrivateMessage *msg)
+	{
+		queue_add(__queue, msg);
 	}
 }

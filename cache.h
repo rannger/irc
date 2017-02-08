@@ -4,9 +4,14 @@
 #include "types.h"
 
 namespace rirc {
+	class BaseMessage;
+	class PrivateMessage;
+
 	void initQueue(void);
-	str_t* getMessage(void);
+	BaseMessage* getMessage(void);
+
 	int printf(char* format,...);
+	void queueAdd(rirc::PrivateMessage* msg);
 }
 
 #endif
