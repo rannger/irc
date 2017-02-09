@@ -108,23 +108,7 @@ namespace rirc {
 		write(m_socketfd,buf,size);
 		delete [] buf;
 	}
-
-	int setNonblocking(int fd)
-	{
-		int flags;
-		/* If they have O_NONBLOCK, use the Posix way to do it */
-#if defined(O_NONBLOCK)
-		/* Fixme: O_NONBLOCK is defined but broken on SunOS 4.1.x and AIX 3.2.5. */
-	        if (-1 == (flags = fcntl(fd, F_GETFL, 0)))
-		        flags = 0;
-		return fcntl(fd, F_SETFL, flags | O_NONBLOCK);
-#else
-		        /* Otherwise, use the old way of doing it */
-		flags = 1;
-	        return ioctl(fd, FIONBIO, &flags);
-#endif
-	} 
-
+		
 	void* handleSocketStream(void* param)
 	{
 		fd_set rfds;
@@ -161,7 +145,7 @@ namespace rirc {
 			size = buf_size - rsize;	
 			if (size > 0) {
 				//__LOG("%s%s %s\n",KYEL,"dispatch msg",__func__);
-				str_t msg((char*)buf,size);
+				str_t msg(reinterpret_cast<char*>(buf),size);
 				slist_t array = ::splitString(msg);
 				for (const str_t& mesg : array){
 					Message *msg = Message::parseMessage(mesg);

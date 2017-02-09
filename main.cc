@@ -87,9 +87,31 @@ int main(int argc, char const *argv[])
 				}
 			} while(1);
 		} else {
+			screen_cord_t cord = {0,0};
+			getxy(&cord);
 			std::string in;
-			std::cin >> in;
-			const std::string str("#ubuntu");
+			while(1) {
+				char ch = 0;
+				ch = getch();
+				if(0x7F == ch) {
+					screen_cord_t cord = {0,0};
+					getxy(&cord);
+					mvprintw(cord.y,cord.x-3,"   ");
+					refresh();
+					move(cord.y,cord.x-3);
+					continue;	
+				}
+				in += ch;
+				if ('\n'==ch) break;
+			}
+			mvprintw(cord.y,0,">>>");
+			char* cleanStr = new char[in.size()+1];
+			memset(cleanStr ,' ',in.size());
+			printw(cleanStr);
+			delete cleanStr;
+			refresh();
+			move(cord.y,3);
+			const std::string str("#rannger");
 			rirc::Command* cmd = rirc::CommandBulider::bulidPrivateMsgCommand(in,str);
 			socket->sendCommand(*cmd);
 			cmd->release();
@@ -112,7 +134,7 @@ void commandHandler(const rirc::Message& msg,rirc::Socket* socket)
 			exit(-1);
 		} else if (msg.command() == str_t("376")) {
 			__LOG("%s",msg.msg().data());
-			rirc::Command* cmd = rirc::CommandBulider::bulidJoinCommand("#ubuntu");
+			rirc::Command* cmd = rirc::CommandBulider::bulidJoinCommand("#rannger");
 			socket->sendCommand(*cmd);
 			cmd->release();
 		} else if (msg.command() == str_t("JOIN")||
