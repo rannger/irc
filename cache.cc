@@ -7,6 +7,7 @@
 #include "pkt_queue.h"
 #include "types.h"
 #include "PrivateMsg.h"
+#include "macro.h"
 
 namespace rirc {
 
@@ -25,6 +26,13 @@ namespace rirc {
 		va_start(argptr, format);
 		int res = vsnprintf(buf,1023,format, argptr);
 		va_end(argptr);
+
+		for(int i = 0;i<res;++i) {
+			const uint8_t val = static_cast<uint8_t>(buf[i]);
+			__IF_DO(val < 0x20||val > 0x7E, 
+					buf[i] = 0x20;);
+		}
+
 		str_t msg(buf,res);
 		rirc::BaseMessage *message = new rirc::BaseMessage(msg);
 		queue_add(__queue, message);

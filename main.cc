@@ -10,6 +10,7 @@
 #include <ncurses.h>
 #include <assert.h>
 #include <typeinfo>
+#include <string.h>
 #include "socket.h"
 #include "Message.h"
 #include "macro.h"
@@ -18,6 +19,13 @@
 #include "cache.h"
 #include "privateMsg.h"
 
+typedef struct screen_cord_t
+{
+	int x;
+	int y;
+} screen_cord_t;
+
+void getxy(screen_cord_t* cord);
 void commandHandler(const rirc::Message& msg,rirc::Socket* socket);
 int main(int argc, char const *argv[])
 {
@@ -33,6 +41,7 @@ int main(int argc, char const *argv[])
 	rirc::Socket* socket = new rirc::Socket("irc.freenode.net",6667,"rst0aic",commandHandler);
 	socket->connect();
 	
+	printw(">>>");
 	do {
 		/* Watch stdin (fd 0) to see when it has input. */
 		FD_ZERO(&rfds);
@@ -47,31 +56,29 @@ int main(int argc, char const *argv[])
 			exit(-1);
 		} else if (0==retval) {
 			do {
+				screen_cord_t cord = {0,0};
+				getxy(&cord);
 				rirc::BaseMessage* msg = rirc::getMessage();
 				if (NULL!=msg) {
 					if (dynamic_cast<rirc::PrivateMessage*>(msg)==NULL) {
 						str_t* message = new str_t(msg->msg());
-						for(int i = 0;i<message->size();++i) {
-							const uint8_t val = static_cast<uint8_t>(message->at(i));
-							if (val < 0x20||val > 0x7E )
-							message->at(i) = 0x20;
-						}
-
 						*message += "\n";
 						attron(COLOR_PAIR(2));
-						printw(message->data());
+						mvprintw(cord.y,0,message->data());
 						attroff(COLOR_PAIR(2));
+						printw(">>>");
 						refresh();
 						delete message;
 						delete msg;
 					} else {
 						rirc::PrivateMessage* message = dynamic_cast<rirc::PrivateMessage*>(msg);
 						attron(COLOR_PAIR(1));
-						printw("<%s> ",message->speaker().data());
+						mvprintw(cord.y,0,"<%s> ",message->speaker().data());
 						attroff(COLOR_PAIR(1));
 						attron(COLOR_PAIR(2));
 						printw("%s \n",message->msg().data());
 						attroff(COLOR_PAIR(2));
+						printw(">>>");
 						refresh();
 						delete message;
 					}
@@ -175,3 +182,10 @@ void commandHandler(const rirc::Message& msg,rirc::Socket* socket)
 		}
 		sched_yield();
 }
+void getxy(screen_cord_t* cord)
+{
+	bzero(cord,sizeof(screen_cord_t));
+	getyx(stdscr,cord->y,cord->x);
+}
+
+

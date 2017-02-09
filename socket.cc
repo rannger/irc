@@ -1,12 +1,8 @@
-#ifdef __WIN32__
-# include <winsock2.h>
-#else
-# include <sys/socket.h>
-# include <netdb.h>
-# include <netinet/in.h>
-# include <arpa/inet.h>
-# include <sys/uio.h>
-#endif
+#include <sys/socket.h>
+#include <netdb.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/uio.h>
 #include <sys/time.h>
 #include <sys/types.h>
 #include <stdlib.h>
@@ -15,6 +11,7 @@
 #include <sstream>
 #include <istream>
 #include <sched.h>
+#include <sys/ioctl.h>
 #include "socket.h"
 #include "Command.h"
 #include "CommandBulider.h"
@@ -56,7 +53,6 @@ namespace rirc {
 		struct hostent *hserver = NULL;
 		int socket = ::socket(AF_INET , SOCK_STREAM , 0);
   		__CHECK(socket > 0);
-
   		bzero(&server,sizeof(struct sockaddr_in));
   		hserver = gethostbyname(m_ip.data());
 
@@ -113,13 +109,29 @@ namespace rirc {
 		delete [] buf;
 	}
 
+	int setNonblocking(int fd)
+	{
+		int flags;
+		/* If they have O_NONBLOCK, use the Posix way to do it */
+#if defined(O_NONBLOCK)
+		/* Fixme: O_NONBLOCK is defined but broken on SunOS 4.1.x and AIX 3.2.5. */
+	        if (-1 == (flags = fcntl(fd, F_GETFL, 0)))
+		        flags = 0;
+		return fcntl(fd, F_SETFL, flags | O_NONBLOCK);
+#else
+		        /* Otherwise, use the old way of doing it */
+		flags = 1;
+	        return ioctl(fd, FIONBIO, &flags);
+#endif
+	} 
+
 	void* handleSocketStream(void* param)
 	{
 		fd_set rfds;
 		struct timeval tv = {0,0};
 
 		const Socket& self = *static_cast<Socket*>(param);
-		static const size_t buf_size = 512;
+		static const size_t buf_size = 1024;
 		uint8_t buf[buf_size];
 		do {
 			FD_ZERO(&rfds);
