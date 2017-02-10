@@ -26,10 +26,12 @@ namespace rirc
 	{
 	public:
 		PrivateMessage() {}
-		PrivateMessage(const str_t speaker,const str_t msg);
+		PrivateMessage(const str_t speaker,const str_t msg,const str_t channel);
 		~PrivateMessage();
 		str_t speaker() const;
+		str_t channel() const;
 	private:
+		str_t m_channel;
 		str_t m_speaker;
 	};
 }

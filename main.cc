@@ -19,6 +19,7 @@
 #include "Command.h"
 #include "cache.h"
 #include "privateMsg.h"
+#include "channel.h"
 
 typedef struct screen_cord_t
 {
@@ -72,6 +73,8 @@ int main(int argc, char const *argv[])
 						delete msg;
 					} else {
 						rirc::PrivateMessage* message = dynamic_cast<rirc::PrivateMessage*>(msg);
+						rirc::Channel* channel = rirc::channel4Name(message->channel());
+						channel->addMessage(message);	
 						attron(COLOR_PAIR(1));
 						mvprintw(cord.y,0,"<%s> ",message->speaker().data());
 						attroff(COLOR_PAIR(1));
@@ -80,15 +83,13 @@ int main(int argc, char const *argv[])
 						attroff(COLOR_PAIR(2));
 						printw(">>>");
 						refresh();
-						delete message;
 					}
 				} else {
 					break;
 				}
 			} while(1);
 		} else {
-			if ((fd.revents & POLLIN) == 0)
-				continue;
+			if ((fd.revents & POLLIN) == 0) continue;
 			screen_cord_t cord = {0,0};
 			getxy(&cord);
 			std::string in;
@@ -98,8 +99,7 @@ int main(int argc, char const *argv[])
 				if(0x7F == ch) {
 					screen_cord_t cord = {0,0};
 					getxy(&cord);
-					if(cord.x>4)
-					{
+					if(cord.x>4) {
 						move(cord.y,(cord.x - 3)<=2?3:(cord.x - 3));
 						for(int i=0;i<(cord.x - 3);++i)
 							delch();
@@ -191,6 +191,7 @@ void commandHandler(const rirc::Message& msg,rirc::Socket* socket)
 		} else if (msg.command() == str_t("PRIVMSG")) {
 			str_t prefix(msg.prefix());
 			str_t trail(msg.trail());
+			str_t channelName(msg.parameters().at(0));
 			for(int i = 0;i<prefix.size();++i) {
 				const uint8_t val = static_cast<uint8_t>(prefix.at(i));
 				if (val < 0x20||val > 0x7E )
@@ -201,7 +202,7 @@ void commandHandler(const rirc::Message& msg,rirc::Socket* socket)
 				if (val < 0x20||val > 0x7E )
 						trail.at(i) = 0x20;
 			}
-			rirc::PrivateMessage* message= new rirc::PrivateMessage(prefix,trail);
+			rirc::PrivateMessage* message = new rirc::PrivateMessage(prefix,trail,channelName);
 			queueAdd(message);
 			//__LOG("%s<%s>%s%s %s",KGRN,msg.prefix().data(),RESET,KMAG,msg.trail().data());
 		} else {
