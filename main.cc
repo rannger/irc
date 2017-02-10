@@ -31,7 +31,6 @@ int main(int argc, char const *argv[])
 	init_pair(1, COLOR_RED, COLOR_BLACK);
 	init_pair(2, COLOR_GREEN, COLOR_BLACK);
 
-        struct timeval tv = {0,0};
 	rirc::initQueue();
 	rirc::Socket* socket = new rirc::Socket("irc.freenode.net",6667,"rst0aic",commandHandler);
 	socket->connect();
