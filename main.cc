@@ -20,14 +20,8 @@
 #include "cache.h"
 #include "privateMsg.h"
 #include "channel.h"
+#include "utils.h"
 
-typedef struct screen_cord_t
-{
-	int x;
-	int y;
-} screen_cord_t;
-
-void getxy(screen_cord_t* cord);
 void commandHandler(const rirc::Message& msg,rirc::Socket* socket);
 int main(int argc, char const *argv[])
 {
@@ -37,7 +31,6 @@ int main(int argc, char const *argv[])
 	init_pair(1, COLOR_RED, COLOR_BLACK);
 	init_pair(2, COLOR_GREEN, COLOR_BLACK);
 
-	fd_set rfds;
         struct timeval tv = {0,0};
 	rirc::initQueue();
 	rirc::Socket* socket = new rirc::Socket("irc.freenode.net",6667,"rst0aic",commandHandler);
@@ -58,7 +51,7 @@ int main(int argc, char const *argv[])
 		} else if (0==retval) {
 			do {
 				screen_cord_t cord = {0,0};
-				getxy(&cord);
+				getxy(stdscr,&cord);
 				rirc::BaseMessage* msg = rirc::getMessage();
 				if (NULL!=msg) {
 					if (dynamic_cast<rirc::PrivateMessage*>(msg)==NULL) {
@@ -91,14 +84,14 @@ int main(int argc, char const *argv[])
 		} else {
 			if ((fd.revents & POLLIN) == 0) continue;
 			screen_cord_t cord = {0,0};
-			getxy(&cord);
+			getxy(stdscr,&cord);
 			std::string in;
 			while(1) {
 				char ch = 0;
 				ch = getch();
 				if(0x7F == ch) {
 					screen_cord_t cord = {0,0};
-					getxy(&cord);
+					getxy(stdscr,&cord);
 					if(cord.x>4) {
 						move(cord.y,(cord.x - 3)<=2?3:(cord.x - 3));
 						for(int i=0;i<(cord.x - 3);++i)
@@ -218,10 +211,4 @@ void commandHandler(const rirc::Message& msg,rirc::Socket* socket)
 		}
 		sched_yield();
 }
-void getxy(screen_cord_t* cord)
-{
-	bzero(cord,sizeof(screen_cord_t));
-	getyx(stdscr,cord->y,cord->x);
-}
-
 

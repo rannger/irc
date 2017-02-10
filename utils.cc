@@ -3,10 +3,10 @@
 #include "channel.h"
 #include "PrivateMsg.h"
 
-void getxy(screen_cord_t* cord)
+void getxy(WINDOW* win,screen_cord_t* cord)
 {
 	bzero(cord,sizeof(screen_cord_t));
-	getyx(stdscr,cord->y,cord->x);
+	getyx(win,cord->y,cord->x);
 }
 
 void reloadChannelMessageInWindow(WINDOW* win,const str_t& channelName)
@@ -16,7 +16,7 @@ void reloadChannelMessageInWindow(WINDOW* win,const str_t& channelName)
 	move(0,0);
 	for(int i=0;i<channel->messageList().size();++i) {
 		screen_cord_t cord = {0,0};
-		getxy(&cord);
+		getxy(win,&cord);
 		rirc::PrivateMessage* message = channel->messageList().at(i);
 		wattron(win,COLOR_PAIR(1));
 		mvwprintw(win,cord.y,0,"<%s> ",message->speaker().data());
