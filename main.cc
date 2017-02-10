@@ -11,6 +11,7 @@
 #include <assert.h>
 #include <typeinfo>
 #include <string.h>
+#include <poll.h>
 #include "socket.h"
 #include "Message.h"
 #include "macro.h"
@@ -43,17 +44,16 @@ int main(int argc, char const *argv[])
 	
 	printw(">>>");
 	do {
-		/* Watch stdin (fd 0) to see when it has input. */
-		FD_ZERO(&rfds);
-		FD_SET(0, &rfds);
-	        /* Wait up to five seconds. */
-		tv.tv_sec = 1;
-	        tv.tv_usec = 0;
-
-		const int retval = select(1, &rfds, NULL, NULL, &tv);
+		struct pollfd fd = {
+			STDIN_FILENO,
+			POLLIN,
+			0
+		};
+		const int retval = poll(&fd,1,1000);
 		if (retval < 0) {
+			__IF_DO(EINTR == errno,continue;);
 			delete socket;
-			exit(-1);
+			__EXIT;
 		} else if (0==retval) {
 			do {
 				screen_cord_t cord = {0,0};
@@ -87,6 +87,8 @@ int main(int argc, char const *argv[])
 				}
 			} while(1);
 		} else {
+			if ((fd.revents & POLLIN) == 0)
+				continue;
 			screen_cord_t cord = {0,0};
 			getxy(&cord);
 			std::string in;
@@ -96,25 +98,36 @@ int main(int argc, char const *argv[])
 				if(0x7F == ch) {
 					screen_cord_t cord = {0,0};
 					getxy(&cord);
-					mvprintw(cord.y,cord.x-3,"   ");
+					if(cord.x>4)
+					{
+						move(cord.y,(cord.x - 3)<=2?3:(cord.x - 3));
+						for(int i=0;i<(cord.x - 3);++i)
+							delch();
+					}
 					refresh();
-					move(cord.y,cord.x-3);
 					continue;	
 				}
-				in += ch;
 				if ('\n'==ch) break;
+				in += ch;
 			}
-			mvprintw(cord.y,0,">>>");
-			char* cleanStr = new char[in.size()+1];
-			memset(cleanStr ,' ',in.size());
-			printw(cleanStr);
-			delete cleanStr;
-			refresh();
-			move(cord.y,3);
 			const std::string str("#rannger");
 			rirc::Command* cmd = rirc::CommandBulider::bulidPrivateMsgCommand(in,str);
 			socket->sendCommand(*cmd);
 			cmd->release();
+			move(cord.y, 0);
+			clrtoeol();
+
+			attron(COLOR_PAIR(1));
+			mvprintw(cord.y,0,"<%s> ",socket->username().data());
+			attroff(COLOR_PAIR(1));
+			attron(COLOR_PAIR(2));
+			printw("%s \n",in.data());
+			attroff(COLOR_PAIR(2));
+
+			printw(">>>");
+			refresh();
+			move(cord.y+1,3);
+
 		}
 	} while(1);
 	endwin();
@@ -131,7 +144,7 @@ void commandHandler(const rirc::Message& msg,rirc::Socket* socket)
 		else if (msg.command() == str_t("ERROR")) {
 			__LOG("%s",msg.msg().data());
 			delete socket;
-			exit(-1);
+			__EXIT;
 		} else if (msg.command() == str_t("376")) {
 			__LOG("%s",msg.msg().data());
 			rirc::Command* cmd = rirc::CommandBulider::bulidJoinCommand("#rannger");

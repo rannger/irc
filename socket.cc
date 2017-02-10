@@ -12,6 +12,7 @@
 #include <istream>
 #include <sched.h>
 #include <sys/ioctl.h>
+#include <poll.h>
 #include "socket.h"
 #include "Command.h"
 #include "CommandBulider.h"
@@ -87,7 +88,8 @@ namespace rirc {
 					handleSocketStream, 
 					static_cast<void*>(this));
 		pthread_attr_destroy(&attr);
-		__IF_DO(res<0,exit(-1););
+		__IF_DO(res<0,
+			__EXIT;);
 	}
 
 	void Socket::disconnect() 
@@ -125,7 +127,7 @@ namespace rirc {
 			tv.tv_usec = 100;
 			const int selectRes = select(self.m_socketfd+1, &rfds, NULL, NULL, &tv);
 			if (selectRes < 0) {
-				exit(-1);
+				__EXIT;
 			} else if (0==selectRes) {
 				sched_yield();
 				continue;
@@ -139,7 +141,22 @@ namespace rirc {
 				size = ::read(self.m_socketfd,buffer,rsize);
 				buffer += size;
 				rsize -= size;
-				__IF_DO(trsize>=size,break;);
+				if (size<0) {
+					__IF_DO(EINTR == errno,break);
+				} else if (trsize == size) {
+					break;
+				} else if (trsize > size) {
+					struct pollfd fd = {
+						self.m_socketfd,
+						POLLIN,
+						0
+					};
+					if (poll(&fd,1,0) > 0) {
+						__IF_DO(fd.revents & POLLIN,continue;);
+					} else {
+						break;
+					}
+				}
 			} while (1);
 
 			size = buf_size - rsize;	

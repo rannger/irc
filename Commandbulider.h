@@ -35,7 +35,6 @@ namespace rirc {
 
 		static Command* bulidQuitCommand(const str_t& msg);
 		static Command* bulidQuitCommand(const char* msg);
-		static Command* bulidQuitCommand(const char* msg,const size_t len);
 		
 		static Command* bulidJoinCommand(const str_t& channel);
 		static Command* bulidJoinCommand(const char* channel);

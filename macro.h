@@ -31,6 +31,12 @@
 	#define RESET ""
 #endif
 
-#define __LOG(format,...) rirc::printf(RESET format RESET, __VA_ARGS__);
+#define __LOG(format,...) rirc::printf(format, __VA_ARGS__);
+
+#define __EXIT \
+	do { \
+		printf("%s,%d,%d",__FILE__,__LINE__,errno); \
+		exit(-1); \
+	} while(0); 
 
 #endif

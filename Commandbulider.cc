@@ -118,13 +118,6 @@ namespace rirc {
 		const str_t mesg(msg);
 		return bulidQuitCommand(msg);
 	}
-
-	Command* CommandBulider::bulidQuitCommand(const char* msg,const size_t len)
-	{
-		const str_t mesg(msg,len);
-		return bulidQuitCommand(msg);
-	}
-
 		
 	Command* CommandBulider::bulidJoinCommand(const str_t& channel)
 	{
