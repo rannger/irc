@@ -2,9 +2,9 @@
 CC = clang++
 LD = Ld 
 CFLAGS = -g -c -Wall -std=gnu++11 
-LDFLAG = -lc++ -lncurses -std=gnu++11 -g
+LDFLAG = -lc++ -std=gnu++11 -lncurses 
 TARGET = main
-OBJS = Command.o Commandbulider.o Message.o main.o socket.o cache.o pkt_queue.o privateMsg.o channel.o utils.o
+OBJS = Command.o Commandbulider.o Message.o PrivateMsg.o cache.o channel.o main.o pkt_queue.o socket.o utils.o
 all: $(TARGET)
 
 $(OBJS): %.o: %.cc
