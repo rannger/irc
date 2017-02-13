@@ -41,6 +41,7 @@
 
 #define __ASSERT_MAIN_THREAD \
 	do { \
+		if(-1==pthread_main_np()) assert(0); \
 		if (pthread_main_np()==0) { \
 			printf("%s,%d,here isn't main thread",__FILE__,__LINE__); \
 			assert(0); \
