@@ -211,7 +211,7 @@ void commandHandler(const rirc::Message& msg,rirc::Socket* socket)
 			__LOG("%s",msg.msg().data());
 			//DO NOT NOTHING.
 		} else if(msg.command() == str_t("332")) {
-			__LOG("%s%s",KCYN,msg.trail().data());
+			__LOG("%s",msg.trail().data());
 		} else if (msg.command() == str_t("005")) {
 			/*
 			for(const str_t &param : msg.parameters())
@@ -242,7 +242,7 @@ void commandHandler(const rirc::Message& msg,rirc::Socket* socket)
 			//		__LOG("%sparam %s\n",KRED,param.data());
 			//__LOG("%strail %s\n",KRED,msg.trail().data());
 			//puts(RESET "--------------------------------------------------------------------------------\n" RESET);
-			__LOG("%s%s",KRED,msg.trail().data());
+			__LOG("%s",msg.trail().data());
 		} else if (msg.command() == str_t("PRIVMSG")) {
 			str_t prefix(msg.prefix());
 			str_t trail(msg.trail());
