@@ -1,2 +1,2 @@
 # irc
-A irc lib
+A irc command line application
