@@ -39,4 +39,11 @@
 		exit(-1); \
 	} while(0); 
 
+#define __ASSERT_MAIN_THREAD \
+	do { \
+		if (pthread_main_np()==0) { \
+			printf("%s,%d,here isn't main thread",__FILE__,__LINE__); \
+			assert(0); \
+		} \
+	} while(0);
 #endif

@@ -17,5 +17,7 @@ typedef struct screen_cord_t
 void getxy(WINDOW* win,screen_cord_t* cord);
 void reloadChannelMessageInWindow(WINDOW* win,const str_t& channelName);
 rirc::Command* commandAnalysis(const str_t &cmdStr);
+str_t currentChannelName(void);
+void setCurrentChannelName(const str_t& channel);
 #endif
 

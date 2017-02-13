@@ -3,6 +3,7 @@
 #include "types.h"
 #include <iostream>
 #include <ncurses.h>
+#include <assert.h>
 
 namespace rirc 
 {
@@ -27,12 +28,12 @@ namespace rirc
 	class PrivateMessage : public BaseMessage
 	{
 	public:
-		PrivateMessage() {}
+		PrivateMessage() { assert(0); }
 		PrivateMessage(const str_t speaker,const str_t msg,const str_t channel);
 		~PrivateMessage();
 		virtual void printInWin(WINDOW* win);
-		str_t speaker() const;
-		str_t channel() const;
+		const str_t& speaker() const;
+		const str_t& channel() const;
 	private:
 		str_t m_channel;
 		str_t m_speaker;
@@ -41,7 +42,7 @@ namespace rirc
 	class JoinMessage: public BaseMessage
 	{
 	public:
-		JoinMessage() {}
+		JoinMessage() { assert(0); }
 		JoinMessage(const str_t& channelName,const str_t userName)
 		:m_channelName(channelName)
 		,m_userName(userName)
@@ -58,7 +59,7 @@ namespace rirc
 	class QuitMessage: public BaseMessage
 	{
 	public:
-		QuitMessage() {}
+		QuitMessage() { assert(0); }
 		QuitMessage(const str_t& username)
 		:m_username(username)
 		{
@@ -67,6 +68,23 @@ namespace rirc
 		const str_t& username(void) const { return m_username; }
 	private:
 		const str_t m_username;
+	};
+
+	class PartMessage: public BaseMessage
+	{
+	public:
+		PartMessage() { assert(0); }
+		PartMessage(const str_t &username,const str_t channelname)
+		:m_username(username)
+		,m_channelname(channelname)
+		{
+		}
+		~PartMessage() {}
+		const str_t& username(void) const { return m_username; }
+		const str_t channelname(void) const { return m_channelname; }
+	private:
+		const str_t m_username;
+		const str_t m_channelname;
 	};
 }
 

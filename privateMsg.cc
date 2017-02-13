@@ -27,12 +27,12 @@ namespace rirc
 
 	PrivateMessage::~PrivateMessage() {}
 
-	str_t PrivateMessage::speaker() const 
+	const str_t& PrivateMessage::speaker() const 
 	{
 		return m_speaker;
 	}
 
-	str_t PrivateMessage::channel() const 
+	const str_t& PrivateMessage::channel() const 
 	{
 		return m_channel;
 	}

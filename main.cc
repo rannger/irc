@@ -65,8 +65,15 @@ int main(int argc, char const *argv[])
 					} else if (dynamic_cast<rirc::JoinMessage*>(msg)!=NULL) {
 						rirc::JoinMessage* message = dynamic_cast<rirc::JoinMessage*>(msg);
 						rirc::Channel* channel = rirc::channel4Name(message->channel());
+						setCurrentChannelName(message->channel());
 						reloadChannelMessageInWindow(stdscr,message->channel());
 						delete msg;
+					} else if (dynamic_cast<rirc::PartMessage*>(msg)!=NULL) {
+						rirc::PartMessage* message = dynamic_cast<rirc::PartMessage*>(msg);
+						if (socket->username() == message->username()) {
+							str_t ch("");
+							setCurrentChannelName(ch);
+						}
 					} else if (dynamic_cast<rirc::QuitMessage*>(msg)!=NULL) {
 						delete socket;
 						exitApp();
@@ -103,7 +110,7 @@ int main(int argc, char const *argv[])
 					 break;
 				in += ch;
 			}
-			if (in.size() == 0) {
+			if (in.empty()) {
 				getxy(stdscr,&cord);
 				wmove(stdscr,cord.y,0);
 				wclrtoeol(stdscr);
@@ -121,11 +128,10 @@ int main(int argc, char const *argv[])
 				socket->sendCommand(*cmd);
 				cmd->release();
 			} else {
-				const std::string str("#rannger");
-				rirc::Command* cmd = rirc::CommandBulider::bulidPrivateMsgCommand(in,str);
+				rirc::Command* cmd = rirc::CommandBulider::bulidPrivateMsgCommand(in,currentChannelName());
 				socket->sendCommand(*cmd);
 				cmd->release();
-				rirc::PrivateMessage* message = new rirc::PrivateMessage(socket->username(),in,str);
+				rirc::PrivateMessage* message = new rirc::PrivateMessage(socket->username(),in,currentChannelName());
 				rirc::Channel* channel = rirc::channel4Name(message->channel());
 				channel->addMessage(message);	
 				move(cord.y, 0);
@@ -183,6 +189,23 @@ void commandHandler(const rirc::Message& msg,rirc::Socket* socket)
 				rirc::QuitMessage* message = new rirc::QuitMessage(userName);
 				queueAdd(message);
 			}
+		} else if (msg.command() == str_t("PART")) {
+			const str_t& channelStr = msg.parameters().at(0);
+			str_t channelName;
+			str_t userName("");
+			for(int i=0;i<msg.prefix().size();++i) {
+				if (msg.prefix().at(i)=='!') 
+					break;
+				userName+=msg.prefix().at(i);
+			}
+			for(int i=0;i<channelStr.size();++i) {
+				const uint8_t val = static_cast<uint8_t>(channelStr.at(i));
+				if (val>=0x20&&val<=0x7E)
+					channelName+=channelStr.at(i);	
+			}
+
+			rirc::PartMessage* message = new rirc::PartMessage(userName,channelName);
+			queueAdd(message);
 		} else if (msg.command() == str_t("353")||
 			msg.command() == str_t("366")) {
 			__LOG("%s",msg.msg().data());

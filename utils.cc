@@ -6,6 +6,9 @@
 #include "Command.h"
 #include <algorithm>
 #include "CommandBulider.h"
+#include <assert.h>
+#include "macro.h"
+#include <unistd.h>
 
 void getxy(WINDOW* win,screen_cord_t* cord)
 {
@@ -28,6 +31,7 @@ void reloadChannelMessageInWindow(WINDOW* win,const str_t& channelName)
 
 rirc::Command* commandAnalysis(const str_t &cmdStr)
 {
+	__ASSERT_MAIN_THREAD
 	if (cmdStr.length() == 0) return NULL;
 	if (cmdStr.at(0) != '/') return NULL;
 	str_t cmd;
@@ -52,6 +56,8 @@ rirc::Command* commandAnalysis(const str_t &cmdStr)
 		for(;i<cmdStr.size();++i) {
 			channelName += cmdStr.at(i);
 		}
+		if (channelName.empty()) 
+			channelName = currentChannelName();
 		ret = rirc::CommandBulider::bulidPartCommand(channelName);
 	} else if (str_t("quit") == cmd) {
 		str_t msg;
@@ -61,4 +67,18 @@ rirc::Command* commandAnalysis(const str_t &cmdStr)
 	}
 
 	return ret;
+}
+
+static str_t g_channel("");
+
+str_t currentChannelName(void)
+{
+	__ASSERT_MAIN_THREAD
+	return g_channel;
+}
+
+void setCurrentChannelName(const str_t& channel)
+{
+	__ASSERT_MAIN_THREAD
+	g_channel = channel;
 }
