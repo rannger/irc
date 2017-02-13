@@ -22,6 +22,7 @@
 #include "channel.h"
 #include "utils.h"
 
+void exitApp(void);
 void commandHandler(const rirc::Message& msg,rirc::Socket* socket);
 int main(int argc, char const *argv[])
 {
@@ -42,39 +43,36 @@ int main(int argc, char const *argv[])
 			POLLIN,
 			0
 		};
-		const int retval = poll(&fd,1,1000);
+		const int retval = poll(&fd,1,100);
 		if (retval < 0) {
 			__IF_DO(EINTR == errno,continue;);
 			delete socket;
 			__EXIT;
 		} else if (0==retval) {
 			do {
-				screen_cord_t cord = {0,0};
-				getxy(stdscr,&cord);
 				rirc::BaseMessage* msg = rirc::getMessage();
 				if (NULL!=msg) {
-					if (dynamic_cast<rirc::PrivateMessage*>(msg)==NULL) {
-						str_t* message = new str_t(msg->msg());
-						*message += "\n";
-						attron(COLOR_PAIR(2));
-						mvprintw(cord.y,0,message->data());
-						attroff(COLOR_PAIR(2));
-						printw(">>>");
-						refresh();
-						delete message;
-						delete msg;
-					} else {
+					if (dynamic_cast<rirc::PrivateMessage*>(msg)!=NULL) {
 						rirc::PrivateMessage* message = dynamic_cast<rirc::PrivateMessage*>(msg);
 						rirc::Channel* channel = rirc::channel4Name(message->channel());
-						channel->addMessage(message);	
-						attron(COLOR_PAIR(1));
-						mvprintw(cord.y,0,"<%s> ",message->speaker().data());
-						attroff(COLOR_PAIR(1));
-						attron(COLOR_PAIR(2));
-						printw("%s \n",message->msg().data());
-						attroff(COLOR_PAIR(2));
-						printw(">>>");
-						refresh();
+						if (channel->messageListSize() == 0) {
+							channel->addMessage(message);	
+							reloadChannelMessageInWindow(stdscr,message->channel());
+						} else {
+							channel->addMessage(message);	
+							msg->printInWin(stdscr);
+						}
+					} else if (dynamic_cast<rirc::JoinMessage*>(msg)!=NULL) {
+						rirc::JoinMessage* message = dynamic_cast<rirc::JoinMessage*>(msg);
+						rirc::Channel* channel = rirc::channel4Name(message->channel());
+						reloadChannelMessageInWindow(stdscr,message->channel());
+						delete msg;
+					} else if (dynamic_cast<rirc::QuitMessage*>(msg)!=NULL) {
+						delete socket;
+						exitApp();
+					} else {
+						msg->printInWin(stdscr);
+						delete msg;
 					}
 				} else {
 					break;
@@ -84,42 +82,57 @@ int main(int argc, char const *argv[])
 			if ((fd.revents & POLLIN) == 0) continue;
 			screen_cord_t cord = {0,0};
 			getxy(stdscr,&cord);
-			std::string in;
+			std::string in("");
 			while(1) {
-				char ch = 0;
-				ch = getch();
+				const char ch = getch();
 				if(0x7F == ch) {
 					screen_cord_t cord = {0,0};
 					getxy(stdscr,&cord);
 					if(cord.x>4) {
 						move(cord.y,(cord.x - 3)<=2?3:(cord.x - 3));
-						for(int i=0;i<(cord.x - 3);++i)
+						for(int i=0;i<(cord.x - 3);++i) {
 							delch();
+						}
+						if (in.length()!=0)
+							in.erase(in.length()-1,1);
 					}
 					refresh();
 					continue;	
 				}
-				if ('\n'==ch) break;
+				if ('\n'==ch)
+					 break;
 				in += ch;
 			}
-			const std::string str("#rannger");
-			rirc::Command* cmd = rirc::CommandBulider::bulidPrivateMsgCommand(in,str);
-			socket->sendCommand(*cmd);
-			cmd->release();
-			move(cord.y, 0);
-			clrtoeol();
+			if (in.size() == 0) {
+				getxy(stdscr,&cord);
+				wmove(stdscr,cord.y,0);
+				wclrtoeol(stdscr);
+				mvwprintw(stdscr,cord.y,0,">>>");
+				wrefresh(stdscr);
+				continue;
+			} else {
+				getxy(stdscr,&cord);
+				mvwprintw(stdscr,cord.y+1,0,">>>");
+				wrefresh(stdscr);
 
-			attron(COLOR_PAIR(1));
-			mvprintw(cord.y,0,"<%s> ",socket->username().data());
-			attroff(COLOR_PAIR(1));
-			attron(COLOR_PAIR(2));
-			printw("%s \n",in.data());
-			attroff(COLOR_PAIR(2));
-
-			printw(">>>");
-			refresh();
-			move(cord.y+1,3);
-
+			}
+			rirc::Command* cmd = commandAnalysis(in);
+			if (NULL != cmd) {
+				socket->sendCommand(*cmd);
+				cmd->release();
+			} else {
+				const std::string str("#rannger");
+				rirc::Command* cmd = rirc::CommandBulider::bulidPrivateMsgCommand(in,str);
+				socket->sendCommand(*cmd);
+				cmd->release();
+				rirc::PrivateMessage* message = new rirc::PrivateMessage(socket->username(),in,str);
+				rirc::Channel* channel = rirc::channel4Name(message->channel());
+				channel->addMessage(message);	
+				move(cord.y, 0);
+				clrtoeol();
+				message->printInWin(stdscr);
+				move(cord.y+1,3);
+			}
 		}
 	} while(1);
 	endwin();
@@ -139,13 +152,40 @@ void commandHandler(const rirc::Message& msg,rirc::Socket* socket)
 			__EXIT;
 		} else if (msg.command() == str_t("376")) {
 			__LOG("%s",msg.msg().data());
-			rirc::Command* cmd = rirc::CommandBulider::bulidJoinCommand("#rannger");
-			socket->sendCommand(*cmd);
-			cmd->release();
-		} else if (msg.command() == str_t("JOIN")||
-			msg.command() == str_t("QUIT")||
-			msg.command() == str_t("353")||
+			//rirc::Command* cmd = rirc::CommandBulider::bulidJoinCommand("#rannger");
+			//socket->sendCommand(*cmd);
+			//cmd->release();
+		} else if (msg.command() == str_t("JOIN")) {
+			const str_t& channelStr = msg.parameters().at(0);
+			str_t channelName;
+			str_t userName("");
+			for(int i=0;i<msg.prefix().size();++i) {
+				if (msg.prefix().at(i)=='!') 
+					break;
+				userName+=msg.prefix().at(i);
+			}
+			for(int i=0;i<channelStr.size();++i) {
+				const uint8_t val = static_cast<uint8_t>(channelStr.at(i));
+				if (val>=0x20&&val<=0x7E)
+					channelName+=channelStr.at(i);	
+			}
+
+			rirc::JoinMessage* message = new rirc::JoinMessage(channelName,userName);
+			queueAdd(message);
+		} else if (msg.command() == str_t("QUIT")) {
+			str_t userName("");
+			for(int i=0;i<msg.prefix().size();++i) {
+				if (msg.prefix().at(i)=='!') 
+					break;
+				userName+=msg.prefix().at(i);
+			}
+			if (socket->username() == userName) {
+				rirc::QuitMessage* message = new rirc::QuitMessage(userName);
+				queueAdd(message);
+			}
+		} else if (msg.command() == str_t("353")||
 			msg.command() == str_t("366")) {
+			__LOG("%s",msg.msg().data());
 			//DO NOT NOTHING.
 		} else if(msg.command() == str_t("332")) {
 			__LOG("%s%s",KCYN,msg.trail().data());
@@ -183,7 +223,8 @@ void commandHandler(const rirc::Message& msg,rirc::Socket* socket)
 		} else if (msg.command() == str_t("PRIVMSG")) {
 			str_t prefix(msg.prefix());
 			str_t trail(msg.trail());
-			str_t channelName(msg.parameters().at(0));
+			const str_t& channelStr = msg.parameters().at(0);
+			str_t channelName("");
 			for(int i = 0;i<prefix.size();++i) {
 				const uint8_t val = static_cast<uint8_t>(prefix.at(i));
 				if (val < 0x20||val > 0x7E )
@@ -193,6 +234,11 @@ void commandHandler(const rirc::Message& msg,rirc::Socket* socket)
 				const uint8_t val = static_cast<uint8_t>(trail.at(i));
 				if (val < 0x20||val > 0x7E )
 						trail.at(i) = 0x20;
+			}
+			for(int i=0;i<channelStr.size();++i) {
+				const uint8_t val = static_cast<uint8_t>(channelStr.at(i));
+				if (val>=0x20&&val<=0x7E)
+					channelName+=channelStr.at(i);	
 			}
 			rirc::PrivateMessage* message = new rirc::PrivateMessage(prefix,trail,channelName);
 			queueAdd(message);
@@ -209,5 +255,16 @@ void commandHandler(const rirc::Message& msg,rirc::Socket* socket)
 			*/
 		}
 		sched_yield();
+}
+
+void exitApp(void)
+{
+		do {
+			rirc::BaseMessage* msg = rirc::getMessage();
+			if (NULL == msg) break;
+			delete msg;
+		} while(1);
+		rirc::clearChannelMap();
+		exit(0);
 }
 

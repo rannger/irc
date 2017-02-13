@@ -16,7 +16,7 @@ namespace rirc {
 		void connect();
 		void disconnect();
 		void sendCommand(const Command& cmd) const;
-		str_t username(void) const { return m_username; }
+		const str_t& username(void) const { return m_username; }
 	private:
 		Socket();
 		const Socket& self;

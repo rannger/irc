@@ -46,7 +46,7 @@ namespace rirc {
 		return retVal;
 	}
 
-	void queueAdd(rirc::PrivateMessage *msg)
+	void queueAdd(rirc::BaseMessage *msg)
 	{
 		queue_add(__queue, msg);
 	}

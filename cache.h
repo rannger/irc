@@ -11,7 +11,7 @@ namespace rirc {
 	BaseMessage* getMessage(void);
 
 	int printf(char* format,...);
-	void queueAdd(rirc::PrivateMessage* msg);
+	void queueAdd(rirc::BaseMessage* msg);
 }
 
 #endif

@@ -49,6 +49,20 @@ namespace rirc
 		}
 		return channeMapSingleInstance()->at(name);
 	}
+
+	void clearChannelMap(void)
+	{
+		std::vector<rirc::Channel*> v(channeMapSingleInstance()->size());
+		for(auto const &ent : *channeMapSingleInstance()) {
+			  v.push_back(ent.second);
+		}
+		for(int i = 0;i<v.size();++i) {
+			rirc::Channel* ch = v.at(i);
+			delete ch;
+		}
+		channeMapSingleInstance()->clear();
+		delete channeMapSingleInstance();
+	}
 }
 
 
