@@ -175,21 +175,21 @@ int main(int argc, char const *argv[])
 
 void commandHandler(const rirc::Message& msg,rirc::Socket* socket)
 {
-		if (msg.command() == str_t("PING")) {
+		if (msg.command() == ("PING")) {
 			rirc::Command* cmd = rirc::CommandBulider::bulidPongCommand(msg.trail());
 			socket->sendCommand(*cmd);
 			cmd->release();
 		} 
-		else if (msg.command() == str_t("ERROR")) {
+		else if (msg.command() == ("ERROR")) {
 			__LOG("%s",msg.msg().data());
 			delete socket;
 			__EXIT;
-		} else if (msg.command() == str_t("376")) {
+		} else if (msg.command() == ("376")) {
 			__LOG("%s",msg.msg().data());
 			//rirc::Command* cmd = rirc::CommandBulider::bulidJoinCommand("#rannger");
 			//socket->sendCommand(*cmd);
 			//cmd->release();
-		} else if (msg.command() == str_t("JOIN")) {
+		} else if (msg.command() == ("JOIN")) {
 			const str_t& channelStr = msg.parameters().at(0);
 			str_t channelName;
 			str_t userName("");
@@ -206,7 +206,7 @@ void commandHandler(const rirc::Message& msg,rirc::Socket* socket)
 
 			rirc::JoinMessage* message = new rirc::JoinMessage(channelName,userName);
 			queueAdd(message);
-		} else if (msg.command() == str_t("QUIT")) {
+		} else if (msg.command() == ("QUIT")) {
 			str_t userName("");
 			for(int i=0;i<msg.prefix().size();++i) {
 				if ('!'==msg.prefix().at(i)) 
@@ -217,7 +217,7 @@ void commandHandler(const rirc::Message& msg,rirc::Socket* socket)
 				rirc::QuitMessage* message = new rirc::QuitMessage(userName);
 				queueAdd(message);
 			}
-		} else if (msg.command() == str_t("PART")) {
+		} else if (msg.command() == ("PART")) {
 			const str_t& channelStr = msg.parameters().at(0);
 			str_t channelName;
 			str_t userName("");
@@ -234,11 +234,11 @@ void commandHandler(const rirc::Message& msg,rirc::Socket* socket)
 
 			rirc::PartMessage* message = new rirc::PartMessage(userName,channelName);
 			queueAdd(message);
-		} else if (msg.command() == str_t("353")||
+		} else if (msg.command() == ("353")||
 			msg.command() == str_t("366")) {
 			__LOG("%s",msg.msg().data());
 			//DO NOT NOTHING.
-		} else if(msg.command() == str_t("332")) {
+		} else if(msg.command() == ("332")) {
 			__LOG("%s",msg.trail().data());
 		} else if (msg.command() == str_t("005")) {
 			/*
@@ -246,23 +246,23 @@ void commandHandler(const rirc::Message& msg,rirc::Socket* socket)
 				__LOG("%s ",param.data());
 			__LOG("%s\n",msg.trail().data());
 			*/
-		} else if (msg.command() == str_t("372")||
-			msg.command() == str_t("NOTICE")||
-			msg.command() == str_t("001")||
-			msg.command() == str_t("002")||
-			msg.command() == str_t("003")||
-			msg.command() == str_t("004")||
-			msg.command() == str_t("251")||
-			msg.command() == str_t("252")||
-			msg.command() == str_t("253")||
-			msg.command() == str_t("254")||
-			msg.command() == str_t("255")||
-			msg.command() == str_t("250")||
-			msg.command() == str_t("265")||
-			msg.command() == str_t("266")||
-			msg.command() == str_t("375")||
-			msg.command() == str_t("376")||
-			msg.command() == str_t("333")) {
+		} else if (msg.command() == ("372")||
+			msg.command() == ("NOTICE")||
+			msg.command() == ("001")||
+			msg.command() == ("002")||
+			msg.command() == ("003")||
+			msg.command() == ("004")||
+			msg.command() == ("251")||
+			msg.command() == ("252")||
+			msg.command() == ("253")||
+			msg.command() == ("254")||
+			msg.command() == ("255")||
+			msg.command() == ("250")||
+			msg.command() == ("265")||
+			msg.command() == ("266")||
+			msg.command() == ("375")||
+			msg.command() == ("376")||
+			msg.command() == ("333")) {
 			//puts(RESET "--------------------------------------------------------------------------------\n" RESET);
 			//__LOG("%sprefix %s\n",KRED,msg.prefix().data());
 			//__LOG("%scommand %s\n",KRED,msg.command().data());
@@ -271,7 +271,7 @@ void commandHandler(const rirc::Message& msg,rirc::Socket* socket)
 			//__LOG("%strail %s\n",KRED,msg.trail().data());
 			//puts(RESET "--------------------------------------------------------------------------------\n" RESET);
 			__LOG("%s",msg.trail().data());
-		} else if (msg.command() == str_t("PRIVMSG")) {
+		} else if (msg.command() == ("PRIVMSG")) {
 			str_t prefix(msg.prefix());
 			str_t trail(msg.trail());
 			const str_t& channelStr = msg.parameters().at(0);
