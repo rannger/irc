@@ -4,7 +4,7 @@ A irc command line client
 ### Usage:  
 - Join
 	Join a channel.example:  
-`>>> /join #ubunte`  
+`>>> /join #ubuntu`  
 - part  
 	leave the channel you have joined now.example:  
 `>>> /part ` 
