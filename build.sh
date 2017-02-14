@@ -3,7 +3,7 @@ CC = clang++
 LD = Ld 
 CFLAGS = -g -c -Wall -std=gnu++11 
 LDFLAG = -lc++ -std=gnu++11 -lncurses 
-TARGET = main
+TARGET = rirc 
 OBJS = `echo $(ls *.cc|sed 's/.cc/.o/g')`
 all: \$(TARGET)
 
