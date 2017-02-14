@@ -43,7 +43,7 @@ int main(int argc, char const *argv[])
 		port = 6667;
 	}
 	do {
-		std::cout<<"user name:"<<std::endl;
+		std::cout<<"nick:"<<std::endl;
 		getline(std::cin, username);
 		removespace(username);
 		if (username.empty()) {
