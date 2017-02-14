@@ -4,18 +4,18 @@
 #include <string.h>
 #include <string>
 #include "cache.h"
-#include "pkt_queue.h"
 #include "types.h"
 #include "PrivateMsg.h"
 #include "macro.h"
+#include "llqueue.h"
 
 namespace rirc {
 
-	static struct queue_root *__queue = NULL;
+	static llqueue *__queue = NULL;
 
 	void initQueue(void) 
 	{ 
-		init_queue(&__queue); 
+		initQueue(&__queue); 
 	}
 	
 	int printf(char* format,...) 
@@ -35,19 +35,19 @@ namespace rirc {
 
 		str_t msg(buf,res);
 		rirc::BaseMessage *message = new rirc::BaseMessage(msg);
-		queue_add(__queue, message);
+		queueAppend(__queue, message);
 		return res;
 	}
 
 	rirc::BaseMessage* getMessage(void)
 	{
 		rirc::BaseMessage* retVal = NULL;
-		retVal = static_cast<rirc::BaseMessage*>(queue_get(__queue));
+		retVal = static_cast<rirc::BaseMessage*>(queueGet(__queue));
 		return retVal;
 	}
 
 	void queueAdd(rirc::BaseMessage *msg)
 	{
-		queue_add(__queue, msg);
+		queueAppend(__queue, msg);
 	}
 }
