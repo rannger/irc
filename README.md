@@ -1,13 +1,13 @@
 # rirc
 A irc command line client  
 
-Usage:  
-1.Join   
+### Usage:  
+- Join
 	Join a channel.example:  
-	>>> /join #ubunte  
-2.part  
+`>>> /join #ubunte`  
+- part  
 	leave the channel you have joined now.example:  
-	>>> /part  
-3.quit  
-	exit application.example:  
-	>>> /quit   
+`>>> /part ` 
+- quit.
+exit application.example:  
+`>>> /quit`   
