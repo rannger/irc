@@ -24,17 +24,45 @@
 
 void exitApp(void);
 void commandHandler(const rirc::Message& msg,rirc::Socket* socket);
+void removespace(str_t& str);
 int main(int argc, char const *argv[])
 {
+	uint32_t port = 0;
+	str_t server,username,portStr;
+	std::string::size_type sz;   // alias of size_t
+	std::cout<<"server:(default is irc.freenode.net)"<<std::endl;
+	getline(std::cin, server);
+	removespace(server);
+	__IF_DO(server.empty(),server = "irc.freenode.net";);
+	std::cout<<"port:(default is 6667)"<<std::endl;
+	getline(std::cin, portStr);
+	if (!portStr.empty()) {
+		port = std::stoi (portStr,&sz);
+		__IF_DO(0==port,port = 6667;);
+	} else {
+		port = 6667;
+	}
+	do {
+		std::cout<<"user name:"<<std::endl;
+		getline(std::cin, username);
+		removespace(username);
+		if (username.empty()) {
+			std::cout<<"user name can't be empty!"<<std::endl;
+		} else {
+			break;
+		}
+	} while(1);
+	
+	rirc::initQueue();
+	rirc::Socket* socket = new rirc::Socket(server,port,username,commandHandler);
+	socket->connect();
+
 	initscr();
 	scrollok(stdscr,TRUE);
 	start_color();
 	init_pair(1, COLOR_RED, COLOR_BLACK);
 	init_pair(2, COLOR_GREEN, COLOR_BLACK);
 
-	rirc::initQueue();
-	rirc::Socket* socket = new rirc::Socket("irc.freenode.net",6667,"rst0aic",commandHandler);
-	socket->connect();
 	
 	printw(">>>");
 	do {
@@ -291,3 +319,7 @@ void exitApp(void)
 		exit(0);
 }
 
+void removespace(str_t& str)
+{
+	str.erase(remove_if(str.begin(), str.end(), isspace), str.end());
+}
