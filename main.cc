@@ -209,7 +209,7 @@ void commandHandler(const rirc::Message& msg,rirc::Socket* socket)
 		} else if (msg.command() == str_t("QUIT")) {
 			str_t userName("");
 			for(int i=0;i<msg.prefix().size();++i) {
-				if (msg.prefix().at(i)=='!') 
+				if ('!'==msg.prefix().at(i)) 
 					break;
 				userName+=msg.prefix().at(i);
 			}
@@ -222,7 +222,7 @@ void commandHandler(const rirc::Message& msg,rirc::Socket* socket)
 			str_t channelName;
 			str_t userName("");
 			for(int i=0;i<msg.prefix().size();++i) {
-				if (msg.prefix().at(i)=='!') 
+				if ('!'==msg.prefix().at(i)) 
 					break;
 				userName+=msg.prefix().at(i);
 			}
@@ -316,6 +316,7 @@ void exitApp(void)
 			delete msg;
 		} while(1);
 		rirc::clearChannelMap();
+		endwin();
 		exit(0);
 }
 
