@@ -1,2 +1,2 @@
 # rirc
-A irc command line application
+A irc command line client
